@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>本地服务插件管理器</title>
+  <link rel="stylesheet" href="css/popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <svg class="logo-icon" viewBox="0 0 48 48">
+          <use href="svg/icons.svg#logo-icon"></use>
+        </svg>
+        <h1 class="title">插件管理器</h1>
+      </div>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span class="status-text">正常</span>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="control-panel">
+        <div class="toggle-row">
+          <span class="toggle-label">启用自动管理</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="enableToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-card">
+          <div class="info-icon">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#server-icon"></use>
+            </svg>
+          </div>
+          <div class="info-content">
+            <div class="info-label">监控域名</div>
+            <div class="info-value" id="domainCount">0</div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#extension-icon"></use>
+            </svg>
+          </div>
+          <div class="info-content">
+            <div class="info-label">已禁用插件</div>
+            <div class="info-value" id="disabledCount">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mode-indicator" id="modeIndicator">
+        <div class="mode-icon">
+          <svg viewBox="0 0 24 24">
+            <use href="svg/icons.svg#shield-icon"></use>
+          </svg>
+        </div>
+        <div class="mode-content">
+          <div class="mode-label">当前模式</div>
+          <div class="mode-value" id="modeText">正常模式</div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-primary" id="disableBtn">
+          <svg class="btn-icon" viewBox="0 0 24 24">
+            <use href="svg/icons.svg#pause-icon"></use>
+          </svg>
+          <span>禁用其他插件</span>
+        </button>
+        <button class="btn btn-secondary" id="restoreBtn">
+          <svg class="btn-icon" viewBox="0 0 24 24">
+            <use href="svg/icons.svg#play-icon"></use>
+          </svg>
+          <span>恢复所有插件</span>
+        </button>
+      </div>
+
+      <div class="extensions-list" id="extensionsList">
+        <div class="list-header">
+          <span>插件列表</span>
+        </div>
+        <div class="list-content" id="extensionsContent">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <button class="settings-btn" id="settingsBtn">
+        <svg viewBox="0 0 24 24">
+          <use href="svg/icons.svg#settings-icon"></use>
+        </svg>
+        <span>设置</span>
+      </button>
+      <button class="settings-btn" id="extensionsBtn">
+        <svg viewBox="0 0 24 24">
+          <use href="svg/icons.svg#extension-icon"></use>
+        </svg>
+        <span>扩展管理</span>
+      </button>
+    </footer>
+  </div>
+
+  <script src="js/popup.js"></script>
+</body>
+</html>

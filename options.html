@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设置 - 本地服务插件管理器</title>
+  <link rel="stylesheet" href="css/options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <svg class="logo-icon" viewBox="0 0 48 48">
+          <use href="svg/icons.svg#logo-icon"></use>
+        </svg>
+        <h1 class="title">设置</h1>
+      </div>
+      <button class="close-btn" id="closeBtn">
+        <svg viewBox="0 0 24 24">
+          <use href="svg/icons.svg#close-icon"></use>
+        </svg>
+      </button>
+    </header>
+
+    <main class="main-content">
+      <section class="section">
+        <h2 class="section-title">基本设置</h2>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">启用自动管理</div>
+            <div class="setting-description">访问本地服务时自动禁用其他插件</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="enabledToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">使用正则表达式</div>
+            <div class="setting-description">使用正则表达式匹配域名模式</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="regexToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">监控域名</h2>
+        <div class="domain-list">
+          <div class="domain-input-group">
+            <input type="text" id="domainInput" placeholder="输入域名或IP地址" class="domain-input">
+            <button class="btn btn-primary" id="addDomainBtn">
+              <svg viewBox="0 0 24 24">
+                <use href="svg/icons.svg#add-icon"></use>
+              </svg>
+              <span>添加</span>
+            </button>
+          </div>
+          <div class="domain-items" id="domainItems">
+          </div>
+        </div>
+        <div class="help-text">
+          <svg viewBox="0 0 24 24">
+            <use href="svg/icons.svg#info-icon"></use>
+          </svg>
+          <span>支持通配符匹配，如 *.localhost 或 192.168.*</span>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">主题设置</h2>
+        <div class="theme-selector">
+          <button class="theme-btn active" data-theme="light">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#sun-icon"></use>
+            </svg>
+            <span>亮色主题</span>
+          </button>
+          <button class="theme-btn" data-theme="dark">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#moon-icon"></use>
+            </svg>
+            <span>暗色主题</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">操作</h2>
+        <div class="action-buttons">
+          <button class="btn btn-secondary" id="resetBtn">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#refresh-icon"></use>
+            </svg>
+            <span>重置设置</span>
+          </button>
+          <button class="btn btn-danger" id="clearBtn">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#trash-icon"></use>
+            </svg>
+            <span>清除所有数据</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="version-info">
+        <span>版本 1.0.0</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="js/options.js"></script>
+</body>
+</html>

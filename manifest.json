@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "本地服务插件管理器",
+  "version": "1.0.3",
+  "description": "自动管理访问本地服务时的其他浏览器插件状态",
+  "permissions": [
+    "management",
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "js/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "svg/icon-16.svg",
+      "32": "svg/icon-32.svg",
+      "48": "svg/icon-48.svg",
+      "128": "svg/icon-128.svg"
+    },
+    "default_title": "本地服务插件管理器"
+  },
+  "icons": {
+    "16": "svg/icon-16.svg",
+    "32": "svg/icon-32.svg",
+    "48": "svg/icon-48.svg",
+    "128": "svg/icon-128.svg"
+  },
+  "options_page": "options.html",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:*/*",
+      "http://127.0.0.1:*/*"
+    ]
+  }
+}
