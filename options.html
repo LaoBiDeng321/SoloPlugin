@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="css/options.css">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
+  <div class="container" id="draggableContainer">
+    <header class="header" id="dragHandle">
       <div class="header-content">
         <svg class="logo-icon" viewBox="0 0 48 48">
           <use href="svg/icons.svg#logo-icon"></use>
@@ -33,6 +33,17 @@
           </div>
           <label class="toggle-switch">
             <input type="checkbox" id="enabledToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">包含 file:// 协议</div>
+            <div class="setting-description">访问本地文件时也自动禁用其他插件</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="fileProtocolToggle" checked>
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -111,7 +122,7 @@
 
     <footer class="footer">
       <div class="version-info">
-        <span>版本 1.0.0</span>
+        <span>版本 1.0.4</span>
       </div>
     </footer>
   </div>

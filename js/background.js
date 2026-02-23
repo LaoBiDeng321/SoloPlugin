@@ -1,5 +1,6 @@
 const DEFAULT_CONFIG = {
   enabled: true,
+  includeFileProtocol: true,
   domains: [
     'localhost',
     '127.0.0.1',
@@ -61,6 +62,11 @@ function isLocalService(url) {
   
   try {
     const urlObj = new URL(url);
+    
+    if (urlObj.protocol === 'file:' && config.includeFileProtocol) {
+      return true;
+    }
+    
     const hostname = urlObj.hostname;
     
     if (config.useRegex) {
