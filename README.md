@@ -114,9 +114,9 @@
 │   ├── icon-48.svg        # 48x48图标
 │   └── icon-128.svg       # 128x128图标
 ├── img/
-│   └── backgrounds/      # 背景图片文件夹
+│   └── backgrounds/      # 背景图片文件夹（github是不是不允许空文件夹啊，自己建吧）
 ├── videos/
-│   └── backgrounds/      # 背景视频文件夹
+│   └── backgrounds/      # 背景视频文件夹（github是不是不允许空文件夹啊，自己建吧）
 └── README.md              # 项目文档
 ```
 
