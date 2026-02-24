@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "本地服务插件管理器",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "管理本地服务访问时的插件状态",
   "permissions": [
     "management",
