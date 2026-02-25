@@ -64,6 +64,33 @@ async function loadConfig() {
     if (imageTypeToggle) imageTypeToggle.checked = selectedTypes.image;
     if (videoTypeToggle) videoTypeToggle.checked = selectedTypes.video;
   }
+  
+  // NSFW默认关闭，不保存状态
+  nsfwEnabled = false;
+  const nsfwToggle = document.getElementById('nsfwToggle');
+  if (nsfwToggle) nsfwToggle.checked = false;
+  
+  // 仅NSFW默认关闭，不保存状态
+  nsfwOnly = false;
+  const nsfwOnlyToggle = document.getElementById('nsfwOnlyToggle');
+  if (nsfwOnlyToggle) nsfwOnlyToggle.checked = false;
+  
+  // 控制仅NSFW选项的显示
+  const nsfwOnlyItem = document.getElementById('nsfwOnlyItem');
+  if (nsfwOnlyItem) {
+    nsfwOnlyItem.style.display = 'none';
+  }
+  
+  // 视频重播默认开启，不保存状态
+  videoReplay = true;
+  const videoReplayToggle = document.getElementById('videoReplayToggle');
+  if (videoReplayToggle) videoReplayToggle.checked = true;
+  
+  // 控制视频重播选项的显示
+  const videoReplayItem = document.getElementById('videoReplayItem');
+  if (videoReplayItem) {
+    videoReplayItem.style.display = autoRotate ? 'none' : 'flex';
+  }
 }
 
 async function saveConfig() {
@@ -145,7 +172,7 @@ async function handleAddDomain() {
     }
   }
 
-  config.domains.push(domain);
+  config.domains.unshift(domain);
   await saveConfig();
   renderDomainList();
   input.value = '';
@@ -187,6 +214,29 @@ async function handleReset() {
     updateUI();
     resetContainerPosition();
     resetRestoreBtnPosition();
+    resetBackgroundBtnPosition();
+    
+    // 重置NSFW相关设置
+    nsfwEnabled = false;
+    nsfwOnly = false;
+    const nsfwToggle = document.getElementById('nsfwToggle');
+    const nsfwOnlyToggle = document.getElementById('nsfwOnlyToggle');
+    const nsfwOnlyItem = document.getElementById('nsfwOnlyItem');
+    if (nsfwToggle) nsfwToggle.checked = false;
+    if (nsfwOnlyToggle) nsfwOnlyToggle.checked = false;
+    if (nsfwOnlyItem) nsfwOnlyItem.style.display = 'none';
+    
+    // 重置视频重播设置
+    videoReplay = true;
+    const videoReplayToggle = document.getElementById('videoReplayToggle');
+    const videoReplayItem = document.getElementById('videoReplayItem');
+    if (videoReplayToggle) videoReplayToggle.checked = true;
+    if (videoReplayItem) {
+      videoReplayItem.style.display = autoRotate ? 'none' : 'flex';
+    }
+    
+    // 重新加载背景文件
+    loadBackgroundFiles();
   }
 }
 
@@ -196,6 +246,28 @@ async function handleClear() {
     config = { ...DEFAULT_CONFIG };
     await saveConfig();
     updateUI();
+    
+    // 重置NSFW相关设置
+    nsfwEnabled = false;
+    nsfwOnly = false;
+    const nsfwToggle = document.getElementById('nsfwToggle');
+    const nsfwOnlyToggle = document.getElementById('nsfwOnlyToggle');
+    const nsfwOnlyItem = document.getElementById('nsfwOnlyItem');
+    if (nsfwToggle) nsfwToggle.checked = false;
+    if (nsfwOnlyToggle) nsfwOnlyToggle.checked = false;
+    if (nsfwOnlyItem) nsfwOnlyItem.style.display = 'none';
+    
+    // 重置视频重播设置
+    videoReplay = true;
+    const videoReplayToggle = document.getElementById('videoReplayToggle');
+    const videoReplayItem = document.getElementById('videoReplayItem');
+    if (videoReplayToggle) videoReplayToggle.checked = true;
+    if (videoReplayItem) {
+      videoReplayItem.style.display = autoRotate ? 'none' : 'flex';
+    }
+    
+    // 重新加载背景文件
+    loadBackgroundFiles();
   }
 }
 
@@ -252,11 +324,19 @@ let selectedTypes = {
   image: true,
   video: true
 };
+let nsfwEnabled = false;
+let nsfwOnly = false;
+let videoReplay = true;
 
 let restoreBtnDragging = false;
 let restoreBtnStartX, restoreBtnStartY;
 let restoreBtnInitialX, restoreBtnInitialY;
 let restoreBtnHasMoved = false;
+
+let backgroundBtnDragging = false;
+let backgroundBtnStartX, backgroundBtnStartY;
+let backgroundBtnInitialX, backgroundBtnInitialY;
+let backgroundBtnHasMoved = false;
 
 async function loadBackgroundFiles() {
   try {
@@ -320,8 +400,64 @@ async function loadImageFiles(rootEntry) {
       readEntries();
     });
 
-    const imageFiles = files.filter(entry => entry.isFile);
-    backgroundImages = imageFiles.map(entry => `img/backgrounds/${entry.name}`);
+    // 支持的图片格式
+    const supportedImageFormats = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+
+    let imageFiles = [];
+    // 如果不是仅NSFW模式，加载普通图片
+    if (!nsfwOnly) {
+      imageFiles = files.filter(entry => {
+        if (!entry.isFile) return false;
+        if (entry.name === 'nsfw') return false;
+        // 检查文件格式
+        const extension = entry.name.toLowerCase().substring(entry.name.lastIndexOf('.'));
+        return supportedImageFormats.includes(extension);
+      });
+      backgroundImages = imageFiles.map(entry => `img/backgrounds/${entry.name}`);
+    } else {
+      // 仅NSFW模式，初始为空
+      backgroundImages = [];
+    }
+
+    // 如果启用了NSFW内容，加载NSFW子文件夹中的内容
+    if (nsfwEnabled) {
+      try {
+        const nsfwEntry = await new Promise((resolve, reject) => {
+          backgroundsEntry.getDirectory('nsfw', {}, (entry) => {
+            resolve(entry);
+          }, (error) => {
+            reject(error);
+          });
+        });
+
+        const nsfwReader = nsfwEntry.createReader();
+        const nsfwFiles = await new Promise((resolve, reject) => {
+          const readEntries = () => {
+            nsfwReader.readEntries((entries) => {
+              if (entries.length) {
+                resolve(entries);
+              } else {
+                resolve([]);
+              }
+            }, (error) => {
+              reject(error);
+            });
+          };
+          readEntries();
+        });
+
+        const nsfwImageFiles = nsfwFiles.filter(entry => {
+          if (!entry.isFile) return false;
+          // 检查文件格式
+          const extension = entry.name.toLowerCase().substring(entry.name.lastIndexOf('.'));
+          return supportedImageFormats.includes(extension);
+        });
+        const nsfwImages = nsfwImageFiles.map(entry => `img/backgrounds/nsfw/${entry.name}`);
+        backgroundImages = backgroundImages.concat(nsfwImages);
+      } catch (error) {
+        console.log('No NSFW image folder found or error loading NSFW images:', error);
+      }
+    }
   } catch (error) {
     console.error('Error loading image files:', error);
     backgroundImages = [];
@@ -362,8 +498,64 @@ async function loadVideoFiles(rootEntry) {
       readEntries();
     });
 
-    const videoFiles = files.filter(entry => entry.isFile);
-    backgroundVideos = videoFiles.map(entry => `videos/backgrounds/${entry.name}`);
+    // 支持的视频格式
+    const supportedVideoFormats = ['.mp4', '.webm', '.ogg'];
+
+    let videoFiles = [];
+    // 如果不是仅NSFW模式，加载普通视频
+    if (!nsfwOnly) {
+      videoFiles = files.filter(entry => {
+        if (!entry.isFile) return false;
+        if (entry.name === 'nsfw') return false;
+        // 检查文件格式
+        const extension = entry.name.toLowerCase().substring(entry.name.lastIndexOf('.'));
+        return supportedVideoFormats.includes(extension);
+      });
+      backgroundVideos = videoFiles.map(entry => `videos/backgrounds/${entry.name}`);
+    } else {
+      // 仅NSFW模式，初始为空
+      backgroundVideos = [];
+    }
+
+    // 如果启用了NSFW内容，加载NSFW子文件夹中的内容
+    if (nsfwEnabled) {
+      try {
+        const nsfwEntry = await new Promise((resolve, reject) => {
+          backgroundsEntry.getDirectory('nsfw', {}, (entry) => {
+            resolve(entry);
+          }, (error) => {
+            reject(error);
+          });
+        });
+
+        const nsfwReader = nsfwEntry.createReader();
+        const nsfwFiles = await new Promise((resolve, reject) => {
+          const readEntries = () => {
+            nsfwReader.readEntries((entries) => {
+              if (entries.length) {
+                resolve(entries);
+              } else {
+                resolve([]);
+              }
+            }, (error) => {
+              reject(error);
+            });
+          };
+          readEntries();
+        });
+
+        const nsfwVideoFiles = nsfwFiles.filter(entry => {
+          if (!entry.isFile) return false;
+          // 检查文件格式
+          const extension = entry.name.toLowerCase().substring(entry.name.lastIndexOf('.'));
+          return supportedVideoFormats.includes(extension);
+        });
+        const nsfwVideos = nsfwVideoFiles.map(entry => `videos/backgrounds/nsfw/${entry.name}`);
+        backgroundVideos = backgroundVideos.concat(nsfwVideos);
+      } catch (error) {
+        console.log('No NSFW video folder found or error loading NSFW videos:', error);
+      }
+    }
   } catch (error) {
     console.error('Error loading video files:', error);
     backgroundVideos = [];
@@ -469,6 +661,10 @@ function applyImageBackground(imagePath) {
 function handleVideoEnded() {
   if (autoRotate) {
     setRandomBackground();
+  } else if (videoReplay && currentVideoElement) {
+    // 如果开启了视频重播，重新播放当前视频
+    currentVideoElement.currentTime = 0;
+    currentVideoElement.play();
   }
 }
 
@@ -625,6 +821,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadContainerPosition();
   initRestoreBtnDraggable();
   loadRestoreBtnPosition();
+  initBackgroundBtnDraggable();
+  loadBackgroundBtnPosition();
 
   if (autoRotate) {
     startAutoRotate();
@@ -647,6 +845,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('rotateIntervalInput').addEventListener('change', handleRotateIntervalChange);
   document.getElementById('imageTypeToggle').addEventListener('change', handleImageTypeToggle);
   document.getElementById('videoTypeToggle').addEventListener('change', handleVideoTypeToggle);
+  document.getElementById('nsfwToggle').addEventListener('change', handleNsfwToggle);
+  document.getElementById('nsfwOnlyToggle').addEventListener('change', handleNsfwOnlyToggle);
+  document.getElementById('videoReplayToggle').addEventListener('change', handleVideoReplayToggle);
   document.getElementById('resetBtn').addEventListener('click', handleReset);
   document.getElementById('resetPositionBtn').addEventListener('click', resetContainerPosition);
   document.getElementById('clearBtn').addEventListener('click', handleClear);
@@ -909,6 +1110,19 @@ function handleAutoRotateToggle(e) {
       rotateIntervalItem.style.display = autoRotate ? 'flex' : 'none';
     }
     
+    // 控制视频重播选项的显示
+    const videoReplayItem = document.getElementById('videoReplayItem');
+    const videoReplayToggle = document.getElementById('videoReplayToggle');
+    if (videoReplayItem) {
+      videoReplayItem.style.display = autoRotate ? 'none' : 'flex';
+    }
+    
+    // 当关闭自动轮转时，重置视频重播为默认开启状态
+    if (!autoRotate) {
+      videoReplay = true;
+      if (videoReplayToggle) videoReplayToggle.checked = true;
+    }
+    
     if (autoRotate) {
       startAutoRotate();
     } else {
@@ -953,6 +1167,48 @@ function handleVideoTypeToggle(e) {
     }
     updateStorage({ selectedTypes });
     setRandomBackground();
+  }
+}
+
+function handleVideoReplayToggle(e) {
+  const newValue = e.target.checked;
+  if (videoReplay !== newValue) {
+    videoReplay = newValue;
+    // 不保存视频重播状态到存储，仅在当前会话中生效
+  }
+}
+
+function handleNsfwToggle(e) {
+  const newValue = e.target.checked;
+  if (nsfwEnabled !== newValue) {
+    nsfwEnabled = newValue;
+    // 不保存NSFW状态到存储，仅在当前会话中生效
+    
+    // 控制仅NSFW选项的显示
+    const nsfwOnlyItem = document.getElementById('nsfwOnlyItem');
+    if (nsfwOnlyItem) {
+      nsfwOnlyItem.style.display = nsfwEnabled ? 'flex' : 'none';
+    }
+    
+    // 如果关闭NSFW，同时关闭仅NSFW选项
+    if (!nsfwEnabled) {
+      nsfwOnly = false;
+      const nsfwOnlyToggle = document.getElementById('nsfwOnlyToggle');
+      if (nsfwOnlyToggle) nsfwOnlyToggle.checked = false;
+    }
+    
+    // 重新加载背景文件
+    loadBackgroundFiles();
+  }
+}
+
+function handleNsfwOnlyToggle(e) {
+  const newValue = e.target.checked;
+  if (nsfwOnly !== newValue) {
+    nsfwOnly = newValue;
+    // 不保存仅NSFW状态到存储，仅在当前会话中生效
+    // 重新加载背景文件
+    loadBackgroundFiles();
   }
 }
 
@@ -1096,4 +1352,131 @@ function resetRestoreBtnPosition() {
   restoreBtn.style.bottom = '20px';
 
   chrome.storage.local.remove(['restoreBtnPosition']);
+}
+
+function handleBackgroundUpdate() {
+  setRandomBackground();
+}
+
+function initBackgroundBtnDraggable() {
+  const backgroundBtn = document.getElementById('backgroundBtn');
+  if (!backgroundBtn) return;
+
+  backgroundBtn.addEventListener('click', (e) => {
+    if (!backgroundBtnHasMoved) {
+      handleBackgroundUpdate();
+    }
+  });
+
+  backgroundBtn.addEventListener('mousedown', (e) => {
+    backgroundBtnDragging = true;
+    backgroundBtnHasMoved = false;
+    backgroundBtnStartX = e.clientX;
+    backgroundBtnStartY = e.clientY;
+    
+    const rect = backgroundBtn.getBoundingClientRect();
+    backgroundBtnInitialX = rect.left;
+    backgroundBtnInitialY = rect.top;
+    
+    backgroundBtn.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!backgroundBtnDragging) return;
+
+    const deltaX = e.clientX - backgroundBtnStartX;
+    const deltaY = e.clientY - backgroundBtnStartY;
+
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+      backgroundBtnHasMoved = true;
+    }
+
+    let newX = backgroundBtnInitialX + deltaX;
+    let newY = backgroundBtnInitialY + deltaY;
+
+    const btnRect = backgroundBtn.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    newX = Math.max(0, Math.min(newX, viewportWidth - btnRect.width));
+    newY = Math.max(0, Math.min(newY, viewportHeight - btnRect.height));
+
+    backgroundBtn.style.left = `${newX}px`;
+    backgroundBtn.style.top = `${newY}px`;
+    backgroundBtn.style.right = 'auto';
+    backgroundBtn.style.bottom = 'auto';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (backgroundBtnDragging) {
+      backgroundBtnDragging = false;
+      backgroundBtn.classList.remove('dragging');
+      saveBackgroundBtnPosition();
+      
+      setTimeout(() => {
+        backgroundBtnHasMoved = false;
+      }, 100);
+    }
+  });
+}
+
+function saveBackgroundBtnPosition() {
+  const backgroundBtn = document.getElementById('backgroundBtn');
+  if (!backgroundBtn) return;
+
+  const rect = backgroundBtn.getBoundingClientRect();
+  const positionData = {
+    left: rect.left,
+    top: rect.top,
+    screenWidth: window.innerWidth,
+    screenHeight: window.innerHeight
+  };
+
+  updateStorage({ backgroundBtnPosition: positionData });
+}
+
+function loadBackgroundBtnPosition() {
+  chrome.storage.local.get(['backgroundBtnPosition'], (result) => {
+    if (!result.backgroundBtnPosition) return;
+
+    const backgroundBtn = document.getElementById('backgroundBtn');
+    if (!backgroundBtn) return;
+
+    const savedPosition = result.backgroundBtnPosition;
+    const btnRect = backgroundBtn.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let left = savedPosition.left;
+    let top = savedPosition.top;
+
+    if (savedPosition.screenWidth && savedPosition.screenHeight) {
+      const scaleX = viewportWidth / savedPosition.screenWidth;
+      const scaleY = viewportHeight / savedPosition.screenHeight;
+
+      left = left * scaleX;
+      top = top * scaleY;
+    }
+
+    left = Math.max(0, Math.min(left, viewportWidth - btnRect.width));
+    top = Math.max(0, Math.min(top, viewportHeight - btnRect.height));
+
+    backgroundBtn.style.left = `${left}px`;
+    backgroundBtn.style.top = `${top}px`;
+    backgroundBtn.style.right = 'auto';
+    backgroundBtn.style.bottom = 'auto';
+  });
+}
+
+function resetBackgroundBtnPosition() {
+  const backgroundBtn = document.getElementById('backgroundBtn');
+  if (!backgroundBtn) return;
+
+  backgroundBtn.style.left = '';
+  backgroundBtn.style.top = '';
+  backgroundBtn.style.right = '20px';
+  backgroundBtn.style.bottom = '80px';
+
+  chrome.storage.local.remove(['backgroundBtnPosition']);
 }

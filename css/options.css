@@ -319,6 +319,54 @@ body::before {
   display: flex;
 }
 
+.background-btn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+}
+
+.background-btn:hover {
+  background: rgba(255, 255, 255, 0.45);
+  transform: scale(1.1);
+}
+
+.background-btn.dragging {
+  opacity: 0.7;
+  cursor: grabbing;
+  transform: scale(1.05);
+  transition: none;
+}
+
+.background-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+[data-theme="dark"] .background-btn {
+  background: rgba(30, 30, 30, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .background-btn:hover {
+  background: rgba(30, 30, 30, 0.45);
+}
+
 .container.minimized {
   opacity: 0;
   pointer-events: none;

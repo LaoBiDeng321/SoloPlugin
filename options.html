@@ -144,6 +144,39 @@
           </div>
           <input type="number" id="rotateIntervalInput" class="interval-input" value="30" min="5" max="300">
         </div>
+
+        <div class="setting-item" id="videoReplayItem" style="display: none;">
+          <div class="setting-info">
+            <div class="setting-label">视频重播</div>
+            <div class="setting-description">当视频播放结束时自动重播（仅在关闭轮转时生效）</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="videoReplayToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">启用NSFW内容</div>
+            <div class="setting-description">允许使用NSFW（不适合工作场所）内容作为背景</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="nsfwToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item" id="nsfwOnlyItem" style="display: none;">
+          <div class="setting-info">
+            <div class="setting-label">仅NSFW内容</div>
+            <div class="setting-description">只使用NSFW内容作为背景（仅在启用NSFW后生效）</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="nsfwOnlyToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </section>
 
       <section class="section">
@@ -191,7 +224,7 @@
 
     <footer class="footer">
       <div class="version-info">
-        <span>版本 1.0.4</span>
+        <span>版本 1.0.7</span>
       </div>
     </footer>
   </div>
@@ -199,6 +232,12 @@
   <button class="restore-btn" id="restoreBtn">
     <svg viewBox="0 0 24 24">
       <use href="svg/icons.svg#restore-icon"></use>
+    </svg>
+  </button>
+
+  <button class="background-btn" id="backgroundBtn">
+    <svg viewBox="0 0 24 24">
+      <use href="svg/icons.svg#refresh-icon"></use>
     </svg>
   </button>
 
