@@ -1,3 +1,14 @@
+/*
+   _____         _         _____   _                _
+  / ____|       | |       |  __ \ | |              (_)
+ | (___    ___  | |  ___  | |__) || | _   _   __ _  _  _ __
+  \___ \  / _ \ | | / _ \ |  ___/ | || | | | / _` || || '_ \
+  ____) || (_) || || (_) || |     | || |_| || (_| || || | | |
+ |_____/  \___/ |_| \___/ |_|     |_| \__,_| \__, ||_||_| |_|
+                                              __/ |
+                                             |___/
+ */
+
 let config = null;
 
 const DEFAULT_CONFIG = {
@@ -337,6 +348,11 @@ let backgroundBtnDragging = false;
 let backgroundBtnStartX, backgroundBtnStartY;
 let backgroundBtnInitialX, backgroundBtnInitialY;
 let backgroundBtnHasMoved = false;
+
+let siteRules = [];
+let siteRulesEnabled = false;
+let editingRuleId = null;
+let availableExtensions = [];
 
 async function loadBackgroundFiles() {
   try {
@@ -749,7 +765,7 @@ function handleVisibilityChange() {
 }
 
 // 存储所有事件监听器的引用，以便在需要时移除
-const eventListeners = {
+let eventListeners = {
   domainInput: null,
   messageListener: null
 };
@@ -854,10 +870,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('closeBtn').addEventListener('click', handleClose);
   document.getElementById('minimizeBtn').addEventListener('click', handleMinimize);
   document.getElementById('restoreBtn').addEventListener('click', handleRestore);
+  document.getElementById('disclaimerLink').addEventListener('click', handleDisclaimerClick);
 
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.addEventListener('click', handleThemeChange);
   });
+
+  document.getElementById('siteRulesEnabledToggle').addEventListener('change', handleSiteRulesEnabledToggle);
+  document.getElementById('addSiteRuleBtn').addEventListener('click', handleAddSiteRule);
+  document.getElementById('cancelSiteRuleBtn').addEventListener('click', handleCancelSiteRule);
+  document.getElementById('saveSiteRuleBtn').addEventListener('click', handleSaveSiteRule);
+  document.getElementById('deleteSiteRuleBtn').addEventListener('click', handleDeleteSiteRule);
+  document.getElementById('testRuleMatchBtn').addEventListener('click', handleTestRuleMatch);
+
+  loadSiteRules();
+  loadExtensionsForSiteRule();
 
   // 添加可见性变化监听器
   document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -1050,6 +1077,9 @@ function resetContainerPosition() {
   container.style.top = '';
 
   chrome.storage.local.remove(['containerPosition']);
+  
+  // 同时重置背景按钮的位置
+  resetBackgroundBtnPosition();
 }
 
 function startAutoRotate() {
@@ -1210,6 +1240,11 @@ function handleNsfwOnlyToggle(e) {
     // 重新加载背景文件
     loadBackgroundFiles();
   }
+}
+
+function handleDisclaimerClick() {
+  // 打开免责声明页面
+  window.open('disclaimer.html', '_blank', 'width=850,height=650,top=100,left=100,resizable=yes,scrollbars=yes');
 }
 
 function handleMinimize() {
@@ -1479,4 +1514,235 @@ function resetBackgroundBtnPosition() {
   backgroundBtn.style.bottom = '80px';
 
   chrome.storage.local.remove(['backgroundBtnPosition']);
+}
+
+async function loadSiteRules() {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'getSiteRules' });
+    siteRules = response.rules || [];
+    siteRulesEnabled = response.enabled || false;
+    renderSiteRulesList();
+    document.getElementById('siteRulesEnabledToggle').checked = siteRulesEnabled;
+  } catch (error) {
+    console.error('Failed to load site rules:', error);
+  }
+}
+
+async function loadExtensionsForSiteRule() {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'getExtensions' });
+    availableExtensions = response.extensions || [];
+    renderExtensionsSelect();
+  } catch (error) {
+    console.error('Failed to load extensions:', error);
+  }
+}
+
+function renderSiteRulesList() {
+  const list = document.getElementById('siteRulesList');
+
+  if (siteRules.length === 0) {
+    list.innerHTML = '<div class="empty-state">暂无站点规则</div>';
+    return;
+  }
+
+  list.innerHTML = siteRules.map(rule => `
+    <div class="site-rule-item ${rule.enabled ? '' : 'disabled'}" data-id="${rule.id}">
+      <div class="site-rule-info">
+        <div class="site-rule-name">${escapeHtml(rule.name)}</div>
+        <div class="site-rule-domains">${escapeHtml(rule.domains.join(', '))}</div>
+      </div>
+      <div class="site-rule-badge ${rule.enabled ? 'badge-enabled' : 'badge-disabled'}">
+        ${rule.enabled ? '启用' : '禁用'}
+      </div>
+      <button class="edit-rule-btn" data-id="${rule.id}">
+        <svg viewBox="0 0 24 24">
+          <use href="svg/icons.svg#edit-icon"></use>
+        </svg>
+      </button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.edit-rule-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      handleEditSiteRule(id);
+    });
+  });
+}
+
+function renderExtensionsSelect() {
+  const container = document.getElementById('ruleExtensionsSelect');
+
+  if (availableExtensions.length === 0) {
+    container.innerHTML = '<div class="empty-state">暂无可用扩展</div>';
+    return;
+  }
+
+  container.innerHTML = availableExtensions.map(ext => `
+    <label class="extension-checkbox">
+      <input type="checkbox" value="${ext.id}" data-name="${ext.name}">
+      <span class="checkbox-label">${escapeHtml(ext.name)}</span>
+    </label>
+  `).join('');
+}
+
+function handleSiteRulesEnabledToggle(e) {
+  siteRulesEnabled = e.target.checked;
+  chrome.runtime.sendMessage({
+    action: 'setSiteRulesEnabled',
+    enabled: siteRulesEnabled
+  });
+}
+
+function handleAddSiteRule() {
+  editingRuleId = null;
+  document.getElementById('siteRuleModalTitle').textContent = '添加规则';
+  document.getElementById('ruleNameInput').value = '';
+  document.getElementById('rulePriorityInput').value = 0;
+  document.getElementById('ruleEnabledToggle').checked = true;
+  document.getElementById('ruleUseRegexToggle').checked = false;
+  document.getElementById('ruleDomainsInput').value = '';
+  document.getElementById('ruleTestUrlInput').value = '';
+  document.getElementById('testResult').textContent = '';
+  document.getElementById('testResult').className = 'test-result';
+  document.getElementById('deleteSiteRuleBtn').style.display = 'none';
+
+  document.querySelectorAll('#ruleExtensionsSelect input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+  });
+
+  const modal = document.getElementById('siteRuleModal');
+  modal.style.display = 'block';
+  modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function handleEditSiteRule(id) {
+  const rule = siteRules.find(r => r.id === id);
+  if (!rule) return;
+
+  editingRuleId = id;
+  document.getElementById('siteRuleModalTitle').textContent = '编辑规则';
+  document.getElementById('ruleNameInput').value = rule.name;
+  document.getElementById('rulePriorityInput').value = rule.priority;
+  document.getElementById('ruleEnabledToggle').checked = rule.enabled;
+  document.getElementById('ruleUseRegexToggle').checked = rule.useRegex;
+  document.getElementById('ruleDomainsInput').value = rule.domains.join('\n');
+  document.getElementById('ruleTestUrlInput').value = '';
+  document.getElementById('testResult').textContent = '';
+  document.getElementById('testResult').className = 'test-result';
+  document.getElementById('deleteSiteRuleBtn').style.display = 'inline-block';
+
+  document.querySelectorAll('#ruleExtensionsSelect input[type="checkbox"]').forEach(cb => {
+    cb.checked = rule.disabledExtensionIds.includes(cb.value);
+  });
+
+  const modal = document.getElementById('siteRuleModal');
+  modal.style.display = 'block';
+  modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function handleCancelSiteRule() {
+  document.getElementById('siteRuleModal').style.display = 'none';
+  editingRuleId = null;
+}
+
+async function handleSaveSiteRule() {
+  const name = document.getElementById('ruleNameInput').value.trim();
+  if (!name) {
+    alert('请输入规则名称');
+    return;
+  }
+
+  const domainsText = document.getElementById('ruleDomainsInput').value.trim();
+  const domains = domainsText.split('\n').map(d => d.trim()).filter(d => d);
+
+  if (domains.length === 0) {
+    alert('请输入至少一个域名');
+    return;
+  }
+
+  const priority = parseInt(document.getElementById('rulePriorityInput').value) || 0;
+  const enabled = document.getElementById('ruleEnabledToggle').checked;
+  const useRegex = document.getElementById('ruleUseRegexToggle').checked;
+
+  const disabledExtensionIds = [];
+  document.querySelectorAll('#ruleExtensionsSelect input[type="checkbox"]:checked').forEach(cb => {
+    disabledExtensionIds.push(cb.value);
+  });
+
+  const rule = {
+    name,
+    domains,
+    priority,
+    enabled,
+    useRegex,
+    disabledExtensionIds
+  };
+
+  try {
+    if (editingRuleId) {
+      await chrome.runtime.sendMessage({
+        action: 'updateSiteRule',
+        id: editingRuleId,
+        rule
+      });
+    } else {
+      await chrome.runtime.sendMessage({
+        action: 'addSiteRule',
+        rule
+      });
+    }
+
+    await loadSiteRules();
+    handleCancelSiteRule();
+  } catch (error) {
+    console.error('Failed to save site rule:', error);
+  }
+}
+
+async function handleDeleteSiteRule() {
+  if (!editingRuleId) return;
+
+  if (confirm('确定要删除这条规则吗？')) {
+    try {
+      await chrome.runtime.sendMessage({
+        action: 'deleteSiteRule',
+        id: editingRuleId
+      });
+
+      await loadSiteRules();
+      handleCancelSiteRule();
+    } catch (error) {
+      console.error('Failed to delete site rule:', error);
+    }
+  }
+}
+
+async function handleTestRuleMatch() {
+  const url = document.getElementById('ruleTestUrlInput').value.trim();
+  if (!url) {
+    document.getElementById('testResult').textContent = '请输入要测试的URL';
+    document.getElementById('testResult').className = 'test-result error';
+    return;
+  }
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'testSiteRuleMatch',
+      url
+    });
+
+    if (response.matched && response.rule) {
+      document.getElementById('testResult').textContent = `匹配成功: ${response.rule.name}`;
+      document.getElementById('testResult').className = 'test-result success';
+    } else {
+      document.getElementById('testResult').textContent = '未匹配到任何规则';
+      document.getElementById('testResult').className = 'test-result error';
+    }
+  } catch (error) {
+    console.error('Failed to test rule match:', error);
+    document.getElementById('testResult').textContent = '测试失败';
+    document.getElementById('testResult').className = 'test-result error';
+  }
 }

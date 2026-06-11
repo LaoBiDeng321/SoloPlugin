@@ -1,3 +1,14 @@
+/*
+   _____         _         _____   _                _
+  / ____|       | |       |  __ \ | |              (_)
+ | (___    ___  | |  ___  | |__) || | _   _   __ _  _  _ __
+  \___ \  / _ \ | | / _ \ |  ___/ | || | | | / _` || || '_ \
+  ____) || (_) || || (_) || |     | || |_| || (_| || || | | |
+ |_____/  \___/ |_| \___/ |_|     |_| \__,_| \__, ||_||_| |_|
+                                              __/ |
+                                             |___/
+ */
+
 let config = null;
 let extensions = [];
 
@@ -63,7 +74,7 @@ function renderExtensionsList() {
   }
 
   content.innerHTML = extensions.map(ext => {
-    const isDisabled = config.disabledExtensions[ext.id];
+    const isDisabled = !ext.enabled;
     return `
       <div class="extension-item ${isDisabled ? 'disabled' : ''}">
         <div class="extension-icon">

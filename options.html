@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+<!--
+   _____         _         _____   _                _
+  / ____|       | |       |  __ \ | |              (_)
+ | (___    ___  | |  ___  | |__) || | _   _   __ _  _  _ __
+  \___ \  / _ \ | | / _ \ |  ___/ | || | | | / _` || || '_ \
+  ____) || (_) || || (_) || |     | || |_| || (_| || || | | |
+ |_____/  \___/ |_| \___/ |_|     |_| \__,_| \__, ||_||_| |_|
+                                              __/ |
+                                             |___/
+-->
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -103,6 +113,104 @@
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">站点规则</h2>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">启用站点规则</div>
+            <div class="setting-description">为特定网站配置独立规则，优先级高于全局域名设置</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="siteRulesEnabledToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="site-rules-header">
+          <button class="btn btn-primary" id="addSiteRuleBtn">
+            <svg viewBox="0 0 24 24">
+              <use href="svg/icons.svg#add-icon"></use>
+            </svg>
+            <span>添加规则</span>
+          </button>
+        </div>
+
+        <div class="site-rules-list" id="siteRulesList">
+        </div>
+      </section>
+
+      <section class="section" id="siteRuleModal" style="display: none;">
+        <h2 class="section-title" id="siteRuleModalTitle">添加规则</h2>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">规则名称</div>
+          </div>
+          <input type="text" id="ruleNameInput" class="text-input" placeholder="my-project（项目名称）">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">优先级</div>
+            <div class="setting-description">数值越高越优先匹配</div>
+          </div>
+          <input type="number" id="rulePriorityInput" class="number-input" value="0" min="0" max="100">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">是否启用</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="ruleEnabledToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">使用正则表达式</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="ruleUseRegexToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item" style="flex-direction: column; align-items: flex-start;">
+          <div class="setting-info">
+            <div class="setting-label">匹配的域名</div>
+            <div class="setting-description">每行一个，支持通配符或正则表达式</div>
+          </div>
+          <textarea id="ruleDomainsInput" class="textarea-input" placeholder="project.localhost&#10;*.project.test"></textarea>
+        </div>
+
+        <div class="setting-item" style="flex-direction: column; align-items: flex-start;">
+          <div class="setting-info">
+            <div class="setting-label">禁用的扩展</div>
+            <div class="setting-description">留空表示禁用所有其他扩展</div>
+          </div>
+          <div class="extensions-select" id="ruleExtensionsSelect">
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">测试URL</div>
+          </div>
+          <input type="text" id="ruleTestUrlInput" class="text-input" placeholder="http://project.localhost:3000">
+          <button class="btn btn-secondary" id="testRuleMatchBtn" style="margin-top: 8px;">测试匹配</button>
+          <div class="test-result" id="testResult"></div>
+        </div>
+
+        <div class="modal-buttons">
+          <button class="btn btn-secondary" id="cancelSiteRuleBtn">取消</button>
+          <button class="btn btn-primary" id="saveSiteRuleBtn">保存</button>
+          <button class="btn btn-danger" id="deleteSiteRuleBtn" style="display: none;">删除</button>
         </div>
       </section>
 
@@ -224,7 +332,8 @@
 
     <footer class="footer">
       <div class="version-info">
-        <span>版本 1.0.7</span>
+        <span>Version 1.1.0</span>
+        <a href="#" id="disclaimerLink" class="disclaimer-link">查看免责声明</a>
       </div>
     </footer>
   </div>
